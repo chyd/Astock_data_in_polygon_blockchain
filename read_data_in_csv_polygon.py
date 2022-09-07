@@ -4,9 +4,28 @@ from web3 import Web3
 import os,json,time,datetime,bz2
 import pandas as pd
 from pandas.core.frame import DataFrame
-#code_list = ['sh_600000','sh_600009','sh_600016','sh_600028','sh_600030','sh_600031','sh_600036','sh_600048','sh_600050','sh_600104','sh_600196','sh_600276','sh_600309','sh_600519','sh_600547','sh_600570','sh_600585','sh_600588','sh_600690','sh_600703','sh_600745','sh_600837','sh_600887','sh_600918','sh_601012','sh_601066','sh_601088','sh_601138','sh_601166','sh_601186','sh_601211','sh_601236','sh_601288','sh_601318','sh_601319','sh_601336','sh_601398','sh_601601','sh_601628','sh_601668','sh_601688','sh_601816','sh_601818','sh_601857','sh_601888','sh_603160','sh_603259','sh_603288','sh_603501','sh_603986']
-#code_list = ['sh_512500','sh_510500']
-code_list = ['sz_159915','sz_159952','sz_399987','sh_512690']
+
+web3_mychain = Web3(Web3.HTTPProvider('https://polygon-rpc.com')) #matic chain rpc
+print(web3_mychain.isConnected())
+print(web3_mychain.eth.blockNumber)
+
+#contract call code
+data_json = json.load(open('./Mydatabase_new.json'))
+abi = data_json["abi"]
+contract_address = web3_mychain.toChecksumAddress('0x93C165704Bb4CF087ec822D9c3321D646C844610') #polygon
+#contract_address = web3_mychain.toChecksumAddress('0xcf67a3bc838dba49c8a8c089a00ef2b7b6ef559d') #bsc
+#contract_address = web3_mychain.toChecksumAddress('0xd49eC5Da3F082B52E5ec2Fa852A227afbd6AE100')
+contract_instance = web3_mychain.eth.contract(address=web3_mychain.toChecksumAddress(contract_address),abi=abi)
+
+
+code_list = []
+length_code_list = int(contract_instance.functions.get_length('my_list_new','gupiao_code').call())
+for i in range(length_code_list):
+    data_raw = contract_instance.functions.read('my_list_new','gupiao_code',i).call()
+    listx = json.loads(bz2.decompress(data_raw.encode('ISO-8859–1')).decode('utf8').replace("'",'"'))
+    code_list += listx.keys()
+print(code_list)
+
 def main_func(code_list):
     for code in code_list:
         ttime = time.time()
@@ -20,20 +39,6 @@ def main_func(code_list):
             print('base file not exist! new file!...')
             is_new_file = True
             time_struct = time.localtime(time.time()-3600*24*30*7) #7month long time
-            
-                
-        web3_mychain = Web3(Web3.HTTPProvider('https://polygon-rpc.com')) #matic chain rpc
-        print(web3_mychain.isConnected())
-        print(web3_mychain.eth.blockNumber)
-        
-        #contract call code
-        data_json = json.load(open('./Mydatabase_new.json'))
-        abi = data_json["abi"]
-        contract_address = web3_mychain.toChecksumAddress('0x93C165704Bb4CF087ec822D9c3321D646C844610') #polygon
-        #contract_address = web3_mychain.toChecksumAddress('0xcf67a3bc838dba49c8a8c089a00ef2b7b6ef559d') #bsc
-        #contract_address = web3_mychain.toChecksumAddress('0xd49eC5Da3F082B52E5ec2Fa852A227afbd6AE100')
-        contract_instance = web3_mychain.eth.contract(address=web3_mychain.toChecksumAddress(contract_address),abi=abi)
-        
         
         data_dict = {}
         print('wait...')
